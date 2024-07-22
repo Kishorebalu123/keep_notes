@@ -1,4 +1,5 @@
 const Note = require('../models/noteModel');
+const { findByIdAndDelete } = require('../models/userModel');
 
 // Get all notes
 const allNotes= async (req, res) => {
@@ -55,12 +56,15 @@ const allNotes= async (req, res) => {
 // Archive a note
  const archiveNote= async (req, res) => {
   try {
+    const archiveStatus=await Note.findById(req.params.id)
     const archivedNote = await Note.findByIdAndUpdate(
       req.params.id,
-      { isArchived: true, updatedAt: Date.now() },
+      { isArchived: !archiveStatus.isArchived, updatedAt: Date.now() },
+      
       { new: true }
     );
     res.json(archivedNote);
+   
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -80,6 +84,19 @@ const allNotes= async (req, res) => {
   }
 };
 
+// Restore or permanently delete a trashed note
+const restoreNote = async (req, res) => {
+try {
+    const note = await Note.findById(req.params.id);
+     note.isTrashed = false;
+      await note.save();
+      return res.status(200).json({ message: 'Note restored', note });
+    
+  } catch (error) {
+    res.status(500).json({ error:  err.message });
+  }
+};
+
 // Delete a note
  const deleteNote= async (req, res) => {
   try {
@@ -90,4 +107,25 @@ const allNotes= async (req, res) => {
   }
 };
 
-module.exports = {allNotes,noteById,createNote,updateNote,archiveNote,trashNote,deleteNote};
+// getArchivedNoes
+const getArchivedNotes = async (req, res) => {
+  try {
+    const notes = await Note.find({ isArchived: true });
+    res.status(200).json(notes);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+// getTrashNotes
+const getTrashedNotes = async (req, res) => {
+  try {
+    const notes = await Note.find({ isTrashed: true });
+    res.status(200).json(notes);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+
+module.exports = {allNotes,noteById,createNote,updateNote,archiveNote,trashNote,restoreNote,deleteNote,getArchivedNotes,getTrashedNotes};

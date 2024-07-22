@@ -30,7 +30,7 @@ mongoose.connect(url)
 
 // Routes
 app.use('/notes', noteRoute);
-app.use('/api',userRoute)
+app.use('/',userRoute)
 
 
 
